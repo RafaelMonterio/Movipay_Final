@@ -181,7 +181,12 @@ async function start() {
       if (i === MAX) process.exit(1);
     }
   }
+if (String(process.env.EXECUTAR_MIGRACOES).toLowerCase() === 'true') {
   await executarMigracoes();
+} else {
+  console.log('⏭️  Migrations ignoradas: banco já configurado externamente.');
+}
+
 
   // Avisa no boot o que ainda falta configurar, em vez de a pessoa descobrir só quando um pagamento falhar no celular.
   const paymentConfig = descreverConfiguracao();

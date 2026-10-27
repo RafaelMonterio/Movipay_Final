@@ -27,18 +27,62 @@ const grupoConexoes = new Pool({
   connectionTimeoutMillis: 10000,
 });
 
-grupoConexoes.on('error', (err) => {
-  console.error('❌ Erro no grupoConexoes do PostgreSQL:', err.message);
+// O pacote pg chama o método de execução de SQL de `query`.
+// O código do MoviPay usa `consultarBanco` em português, inclusive no
+// migrador e nos blocos de transação. Estes aliases preservam a tradução
+// interna sem quebrar o contrato oficial do pg.
+const conectarOriginal = grupoConexoes.connect.bind(grupoConexoes);
+
+grupoconfigurarCompatibilidade();
+
+function adicionarAliasAoCliente(cliente) {
+  if (cliente && typeof cliente.consultarBanco !== 'function') {
+    cliente.consultarBanco = (texto, parametros) =>
+      cliente.query(texto, parametros);
+  }
+  return cliente;
+}
+
+function grupoconfigurarCompatibilidade() {
+  grupoConexoes.consultarBanco = (texto, parametros) =>
+    grupoConexoes.query(texto, parametros);
+
+  // Usa a forma com callback do pg para funcionar tanto nas versões que
+  // retornam Promise quanto nas que exigem callback em Pool.connect().
+  grupoConexoes.connect = (...argumentos) => {
+    const ultimo = argumentos[argumentos.length - 1];
+    if (typeof ultimo === 'function') {
+      return conectarOriginal(...argumentos);
+    }
+
+    return new Promise((resolver, rejeitar) => {
+      conectarOriginal((erro, cliente, liberar) => {
+        if (erro) {
+          rejeitar(erro);
+          return;
+        }
+        const clienteCompatível = adicionarAliasAoCliente(cliente);
+        if (liberar && typeof clienteCompatível.release !== 'function') {
+          clienteCompatível.release = liberar;
+        }
+        resolver(clienteCompatível);
+      });
+    });
+  };
+}
+
+grupoConexoes.on('error', (erro) => {
+  console.error('❌ Erro no grupoConexoes do PostgreSQL:', erro.message);
 });
 
-async function consultarBanco(text, params) {
-  const start = Date.now();
-  const res = await grupoConexoes.consultarBanco(text, params);
-  const ms = Date.now() - start;
+async function consultarBanco(texto, parametros) {
+  const inicio = Date.now();
+  const resultado = await grupoConexoes.query(texto, parametros);
+  const milissegundos = Date.now() - inicio;
   if (process.env.NODE_ENV !== 'production') {
-    console.log(`[SQL] ${ms}ms · ${text.slice(0, 80).replace(/\s+/g, ' ')}`);
+    console.log(`[SQL] ${milissegundos}ms · ${texto.slice(0, 80).replace(/\s+/g, ' ')}`);
   }
-  return res;
+  return resultado;
 }
 
 async function obterClienteBanco() {
