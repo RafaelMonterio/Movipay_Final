@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "ignoreDeprecations": "6.0",
+    "baseUrl": ".",
+    "moduleResolution": "bundler",
+    "paths": {
+      "@/*": ["frontend/src/*"]
+    }
+  },
+  "include": [
+    "frontend/src/**/*",
+    "frontend/**/*.js",
+    "frontend/**/*.jsx",
+    "frontend/**/*.ts",
+    "frontend/**/*.tsx"
+  ],
+  "exclude": [
+    "node_modules",
+    "frontend/node_modules",
+    "frontend/.next",
+    "frontend/mobile"
+  ]
+}

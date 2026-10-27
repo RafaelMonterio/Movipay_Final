@@ -1,0 +1,32 @@
+{
+  "routes": [
+    {"path":"/","title":"MoviPay"},
+    {"path":"/entrar","title":"Entrar"},
+    {"path":"/cadastro","title":"Criar conta"},
+    {"path":"/cliente","title":"Início do cliente"},
+    {"path":"/cliente/ativar-trabalhador","title":"Ativar perfil de trabalhador"},
+    {"path":"/cliente/servicos","title":"Serviços"},
+    {"path":"/cliente/profissionais","title":"Profissionais"},
+    {"path":"/cliente/profissionais/:id","title":"Perfil do profissional"},
+    {"path":"/cliente/favoritos","title":"Favoritos"},
+    {"path":"/cliente/publicacoes","title":"Shorts"},
+    {"path":"/cliente/pedidos","title":"Pedidos"},
+    {"path":"/cliente/pedidos/:id","title":"Detalhes do pedido"},
+    {"path":"/cliente/orcamentos","title":"Orçamentos"},
+    {"path":"/cliente/orcamentos/:id","title":"Detalhes do orçamento"},
+    {"path":"/cliente/pontos","title":"Folhas"},
+    {"path":"/cliente/perfil","title":"Perfil"},
+    {"path":"/cliente/conversas","title":"Conversas"},
+    {"path":"/cliente/avaliacoes","title":"Avaliações"},
+    {"path":"/trabalhador","title":"Início do trabalhador"},
+    {"path":"/trabalhador/agenda","title":"Agenda"},
+    {"path":"/trabalhador/pedidos","title":"Pedidos do trabalhador"},
+    {"path":"/trabalhador/orcamentos","title":"Oportunidades"},
+    {"path":"/trabalhador/servicos","title":"Meus serviços"},
+    {"path":"/trabalhador/ganhos","title":"Ganhos"},
+    {"path":"/trabalhador/carteira","title":"Carteira"},
+    {"path":"/trabalhador/planos","title":"Planos"},
+    {"path":"/trabalhador/perfil","title":"Perfil profissional"},
+    {"path":"/trabalhador/conversas","title":"Conversas do trabalhador"}
+  ]
+}

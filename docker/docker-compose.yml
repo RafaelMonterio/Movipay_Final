@@ -1,0 +1,72 @@
+version: '3.9'
+
+# ══════════════════════════════════════════════════════════════
+# MoviPay — Docker Compose local opcional
+# Serviços: api (Node.js) + db (PostgreSQL)
+# Uso: docker-compose up --build
+# ══════════════════════════════════════════════════════════════
+
+services:
+
+  # ─── PostgreSQL ─────────────────────────────────────────────
+  db:
+    image: postgres:16-alpine
+    container_name: movipay-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB:       movipay
+      POSTGRES_USER:     movipay
+      POSTGRES_PASSWORD: movipay_secret
+    ports:
+      - "5432:5432"       # expõe para você conectar via DBeaver/pgAdmin
+    volumes:
+      - pg_data:/var/lib/postgresql/data   # dados persistem no disco
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U movipay -d movipay"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  # ─── API Node.js ────────────────────────────────────────────
+  api:
+    build:
+      context: ..
+      dockerfile: backend/api/Dockerfile
+    container_name: movipay-api
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy   # aguarda o postgres estar pronto
+    environment:
+      NODE_ENV:    development
+      PORT:        3000
+      DB_HOST:     db
+      DB_PORT:     5432
+      DB_NAME:     movipay
+      DB_USER:     movipay
+      DB_PASSWORD: movipay_secret
+      DATABASE_URL: ${DATABASE_URL:-}
+      SUPABASE_DB_URL: ${SUPABASE_DB_URL:-}
+      DB_SSL: ${DB_SSL:-false}
+      JWT_SECRET:  dev-secret-change-in-prod
+    ports:
+      - "3000:3000"
+    volumes:
+      # O backend já leva as migrations para a imagem. Este volume permite
+      # testar alterações SQL locais sem reconstruir a imagem.
+      - ../database:/app/database:ro
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+# ─── Volumes ──────────────────────────────────────────────────
+volumes:
+  pg_data:
+    driver: local
+    # Este volume guarda os dados no disco do PC.
+    # 'docker-compose down' = para sem apagar os dados
+    # 'docker-compose down -v' = APAGA os dados (cuidado!)

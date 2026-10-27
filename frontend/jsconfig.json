@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "ignoreDeprecations": "6.0",
+    "baseUrl": ".",
+    "moduleResolution": "bundler",   
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": ["src/**/*", "**/*.js", "**/*.jsx"],
+  "exclude": ["node_modules", ".next", "mobile"]
+}

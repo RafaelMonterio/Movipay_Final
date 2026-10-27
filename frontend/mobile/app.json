@@ -1,0 +1,73 @@
+{
+  "expo": {
+    "name": "MoviPay",
+    "slug": "movipay-mobile",
+    "version": "0.9.1",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "scheme": "movipay",
+    "icon": "./assets/logo.png",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.movipay.mobile",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "O MoviPay usa sua localização para preencher seu endereço automaticamente e mostrar profissionais próximos de você no mapa.",
+        "NSPhotoLibraryUsageDescription": "O MoviPay precisa acessar suas fotos e vídeos para você publicar um Short do seu trabalho e definir sua foto de perfil.",
+        "NSCameraUsageDescription": "O MoviPay usa a câmera para você tirar a foto de perfil e gravar um Short do seu trabalho.",
+        "NSMicrophoneUsageDescription": "O MoviPay usa o microfone para gravar o áudio dos vídeos que você publica nos Shorts."
+      }
+    },
+    "android": {
+      "package": "com.movipay.mobile",
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "CAMERA",
+        "READ_MEDIA_IMAGES",
+        "READ_MEDIA_VIDEO",
+        "RECORD_AUDIO"
+      ],
+      "config": {
+        "googleMaps": {
+          "apiKey": "COLOQUE_AQUI_SUA_CHAVE_DO_GOOGLE_MAPS_ANDROID"
+        }
+      }
+    },
+    "web": {
+      "bundler": "metro"
+    },
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "O MoviPay usa sua localização para preencher seu endereço automaticamente e mostrar profissionais próximos de você no mapa."
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/logo.png",
+          "imageWidth": 160,
+          "resizeMode": "contain",
+          "backgroundColor": "#F7F7F5"
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "O MoviPay precisa acessar suas fotos e vídeos para você publicar um Short e definir sua foto de perfil.",
+          "cameraPermission": "O MoviPay usa a câmera para você tirar a foto de perfil e gravar um Short do seu trabalho."
+        }
+      ],
+      [
+        "expo-video",
+        {
+          "supportsBackgroundPlayback": false,
+          "supportsPictureInPicture": false
+        }
+      ],
+      "expo-font",
+      "expo-status-bar"
+    ]
+  }
+}

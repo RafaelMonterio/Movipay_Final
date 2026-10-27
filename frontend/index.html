@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Produtos</title>
+</head>
+<body>
+  <h1>Lista de Produtos</h1>
+  <ul id="lista-produtos"></ul>
+
+  <script>
+    fetch('http://127.0.0.1:8000/produtos')
+      .then(resposta => resposta.json())
+      .then(produtos => {
+        const lista = document.getElementById('lista-produtos');
+        produtos.forEach(produto => {
+          const item = document.createElement('li');
+          item.textContent = `${produto.nome} - R$ ${produto.preco} (qtd: ${produto.quantidade})`;
+          lista.appendChild(item);
+        });
+      })
+      .catch(erro => console.error('Erro ao buscar produtos:', erro));
+  </script>
+</body>
+</html>

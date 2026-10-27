@@ -1,0 +1,114 @@
+{
+  "info": {
+    "_postman_id": "movipay-api-integrada-2026",
+    "name": "MoviPay API integrada",
+    "description": "Coleção para testar a única API usada pelo site e pelo app mobile.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000" },
+    { "key": "token", "value": "" },
+    { "key": "usuarioId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "1 - Health",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "{{baseUrl}}/health", "host": ["{{baseUrl}}"], "path": ["health"] }
+      }
+    },
+    {
+      "name": "2 - Overpass fallback",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": { "mode": "raw", "raw": "{}", "options": { "raw": { "language": "json" } } },
+        "url": { "raw": "{{baseUrl}}/api/overpass", "host": ["{{baseUrl}}"], "path": ["api", "overpass"] }
+      }
+    },
+    {
+      "name": "3 - Login",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const resposta = pm.response.json();",
+              "pm.environment.set('token', resposta.token_acesso);",
+              "pm.environment.set('usuarioId', resposta.usuario.id);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"ana@teste.com\",\n  \"senha\": \"123456\"\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": { "raw": "{{baseUrl}}/api/v1/autenticacao/entrar", "host": ["{{baseUrl}}"], "path": ["api", "v1", "autenticacao", "entrar"] }
+      }
+    },
+    {
+      "name": "4 - Usuário autenticado",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+        "url": { "raw": "{{baseUrl}}/api/v1/autenticacao/me", "host": ["{{baseUrl}}"], "path": ["api", "v1", "autenticacao", "me"] }
+      }
+    },
+    {
+      "name": "5 - Categorias",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "{{baseUrl}}/api/v1/categorias", "host": ["{{baseUrl}}"], "path": ["api", "v1", "categorias"] }
+      }
+    },
+    {
+      "name": "6 - Trabalhadores",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "{{baseUrl}}/api/v1/trabalhadores", "host": ["{{baseUrl}}"], "path": ["api", "v1", "trabalhadores"] }
+      }
+    },
+    {
+      "name": "7 - Serviços",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "{{baseUrl}}/api/v1/servicos", "host": ["{{baseUrl}}"], "path": ["api", "v1", "servicos"] }
+      }
+    },
+    {
+      "name": "8 - Pedidos",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+        "url": { "raw": "{{baseUrl}}/api/v1/pedidos", "host": ["{{baseUrl}}"], "path": ["api", "v1", "pedidos"] }
+      }
+    },
+    {
+      "name": "9 - Conversas",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+        "url": { "raw": "{{baseUrl}}/api/v1/conversas", "host": ["{{baseUrl}}"], "path": ["api", "v1", "conversas"] }
+      }
+    },
+    {
+      "name": "10 - Alias profissionais",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "{{baseUrl}}/api/v1/profissionais", "host": ["{{baseUrl}}"], "path": ["api", "v1", "profissionais"] }
+      }
+    }
+  ]
+}
