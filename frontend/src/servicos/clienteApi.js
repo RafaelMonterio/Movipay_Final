@@ -1,15 +1,105 @@
 import axios from 'axios';
-import { bancoSimulado } from './bancoSimulado';
+import { bancoSimulado, SEED_USERS } from './bancoSimulado';
 
 /**
  * Roteador de mock local para responder requisições imediatamente
  * sem poluir o terminal com erros 404 e garantindo funcionamento 100% offline.
  */
+function getUsuariosMock() {
+  if (typeof window === 'undefined') return Object.fromEntries(SEED_USERS.map(u => [String(u.email).trim().toLowerCase(), u]));
+
+  const registrados = JSON.parse(localStorage.getItem('movipay_users_db') || '{}');
+  const base = Object.fromEntries(SEED_USERS.map(u => [String(u.email).trim().toLowerCase(), u]));
+
+  for (const [email, usuario] of Object.entries(registrados || {})) {
+    if (usuario?.email) {
+      base[String(usuario.email).trim().toLowerCase()] = usuario;
+    } else if (email) {
+      base[String(email).trim().toLowerCase()] = usuario;
+    }
+  }
+
+  return base;
+}
+
 function tratarRotaSimulada(config) {
   const rawUrl = (config.url || '').replace(/^https?:\/\/[^/]+/, '');
   const url = rawUrl.replace(/^\/api\/v1/, '').split('?')[0];
   const method = (config.method || 'get').toLowerCase();
   const data = typeof config.data === 'string' ? JSON.parse(config.data || '{}') : (config.data || {});
+
+  if ((url === '/autenticacao/entrar' || url === '/auth/login') && method === 'post') {
+    const email = String(data.email || '').trim().toLowerCase();
+    const senha = String(data.senha ?? data.password ?? '');
+    const usuarios = getUsuariosMock();
+    const usuario = usuarios[email];
+
+    if (!usuario || String(usuario.password) !== senha) {
+      const error = new Error('E-mail ou senha incorretos.');
+      error.response = { data: { error: { mensagem: 'E-mail ou senha incorretos.' } } };
+      throw error;
+    }
+
+    const { password: _password, ...usuarioSemSenha } = usuario;
+    localStorage.setItem('access_token', 'dev-token');
+    localStorage.setItem('dev_user', JSON.stringify(usuarioSemSenha));
+    return {
+      usuario: usuarioSemSenha,
+      token_acesso: 'dev-token',
+      access_token: 'dev-token',
+    };
+  }
+
+  if ((url === '/autenticacao/cadastrar' || url === '/auth/register') && method === 'post') {
+    const email = String(data.email || '').trim().toLowerCase();
+    const senha = String(data.senha ?? data.password ?? '');
+    const nome = data.nome || data.name || 'Usuário';
+
+    if (!email || !senha) {
+      const error = new Error('Preencha todos os campos obrigatórios.');
+      error.response = { data: { error: { mensagem: 'Preencha todos os campos obrigatórios.' } } };
+      throw error;
+    }
+
+    const usuarios = getUsuariosMock();
+    if (usuarios[email]) {
+      const error = new Error('Este e-mail já está cadastrado. Tente fazer entrar.');
+      error.response = { data: { error: { mensagem: 'Este e-mail já está cadastrado. Tente fazer entrar.' } } };
+      throw error;
+    }
+
+    const novoUsuario = {
+      id: Date.now(),
+      name: nome,
+      email,
+      password: senha,
+      mode: data.modo || data.mode || 'client',
+      points: 0,
+      phone: data.telefone || data.phone || '',
+      bio: data.bio || '',
+      city: data.cidade || data.city || '',
+      neighborhood: data.bairro || data.neighborhood || '',
+      avatar_url: data.url_avatar || data.avatar_url || '',
+      category: data.categoria || data.category || '',
+      services: data.servicos || data.services || [],
+      accepted_terms: !!(data.terms_accepted ?? data.accepted_terms),
+      terms_version: data.terms_version || '2026.09.23',
+      accepted_terms_at: data.accepted_terms_at || new Date().toISOString(),
+    };
+
+    const db = JSON.parse(localStorage.getItem('movipay_users_db') || '{}');
+    db[email] = novoUsuario;
+    localStorage.setItem('movipay_users_db', JSON.stringify(db));
+
+    const { password: _password, ...usuarioSemSenha } = novoUsuario;
+    localStorage.setItem('access_token', 'dev-token');
+    localStorage.setItem('dev_user', JSON.stringify(usuarioSemSenha));
+    return {
+      usuario: usuarioSemSenha,
+      token_acesso: 'dev-token',
+      access_token: 'dev-token',
+    };
+  }
 
   // /pedidos
   if (url === '/pedidos' || url === '/pedidos/' || url === '') {
@@ -251,13 +341,14 @@ const api = axios.create({
       }
     }
 
-    // Caso haja um backend externo configurado
+    // Caso haja um backend externo configurado, mas ele não responda,
+    // o frontend continua funcional em modo local de desenvolvimento.
     const defaultAdapter = axios.defaults.adapter;
     if (typeof defaultAdapter === 'function') {
       try {
         return await defaultAdapter(config);
       } catch (err) {
-        if (typeof window !== 'undefined' && !process.env.NEXT_PUBLIC_API_URL) {
+        if (typeof window !== 'undefined') {
           const data = tratarRotaSimulada(config);
           return {
             data,
