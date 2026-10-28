@@ -181,7 +181,7 @@ async function start() {
       if (i === MAX) process.exit(1);
     }
   }
-if (String(process.env.EXECUTAR_MIGRACOES).toLowerCase() === 'true') {
+if (String(process.env.EXECUTAR_MIGRACOES).toLowerCase() === 'false') {
   await executarMigracoes();
 } else {
   console.log('⏭️  Migrations ignoradas: banco já configurado externamente.');

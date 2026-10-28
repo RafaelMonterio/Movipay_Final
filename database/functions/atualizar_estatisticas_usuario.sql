@@ -1,50 +1,91 @@
 -- ============================================================
 -- atualizar_estatisticas_usuario.sql
--- Recalcula estatísticas de um usuário (nota média, total pedidos)
--- Uso: SELECT atualizar_estatisticas_usuario(trabalhador_id);
+-- Recalcula as estatísticas dos usuários do MoviPay
+-- Compatível com a tabela portuguesa public.usuarios
 -- ============================================================
 
--- Adiciona colunas de stats na tabela usuarios (se não existirem)
-ALTER TABLE usuarios
-  ADD COLUMN IF NOT EXISTS media_avaliacao    NUMERIC(3,2) DEFAULT 0,
-  ADD COLUMN IF NOT EXISTS total_pedidos  INTEGER      DEFAULT 0,
-  ADD COLUMN IF NOT EXISTS total_avaliacoes INTEGER      DEFAULT 0;
+-- Garante que as colunas de estatísticas existam.
+ALTER TABLE public.usuarios
+  ADD COLUMN IF NOT EXISTS media_avaliacao NUMERIC(3,2) DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS total_pedidos INTEGER DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS total_avaliacoes INTEGER DEFAULT 0;
 
--- Função que recalcula e atualiza as stats
-CREATE OR REPLACE FUNCTION atualizar_estatisticas_usuario(p_user_id INTEGER)
-RETURNS VOID AS $$
+-- Remove a versão anterior para permitir a alteração do nome
+-- do parâmetro da função sem erro 42P13.
+DROP FUNCTION IF EXISTS public.atualizar_estatisticas_usuario(INTEGER);
+
+-- Cria a função principal.
+CREATE FUNCTION public.atualizar_estatisticas_usuario(
+  p_usuario_id INTEGER
+)
+RETURNS VOID
+LANGUAGE plpgsql
+AS $$
 BEGIN
-  UPDATE usuarios
+  UPDATE public.usuarios
   SET
     media_avaliacao = (
-      SELECT COALESCE(ROUND(AVG(rating)::NUMERIC, 2), 0)
-      FROM avaliacoes
-      WHERE avaliado_id = p_user_id
+      SELECT COALESCE(
+        ROUND(AVG(a.rating)::NUMERIC, 2),
+        0
+      )
+      FROM public.avaliacoes AS a
+      WHERE a.avaliado_id = p_usuario_id
     ),
+
     total_avaliacoes = (
-      SELECT COUNT(*)
-      FROM avaliacoes
-      WHERE avaliado_id = p_user_id
+      SELECT COUNT(*)::INTEGER
+      FROM public.avaliacoes AS a
+      WHERE a.avaliado_id = p_usuario_id
     ),
+
     total_pedidos = (
-      SELECT COUNT(*)
-      FROM pedidos
-      WHERE (cliente_id = p_user_id OR trabalhador_id = p_user_id)
-        AND estado = 'completed'
+      SELECT COUNT(*)::INTEGER
+      FROM public.pedidos AS p
+      WHERE (
+        p.cliente_id = p_usuario_id
+        OR p.trabalhador_id = p_usuario_id
+      )
+      AND p.estado = 'completed'
     ),
+
     atualizado_em = NOW()
-  WHERE id = p_user_id;
+
+  WHERE id = p_usuario_id;
 END;
-$$ LANGUAGE plpgsql;
+$$;
 
-COMMENT ON FUNCTION atualizar_estatisticas_usuario IS
-  'Recalcula nota média, total de pedidos e avaliacoes do usuário. '
-  'Chamada automaticamente pelo trigger após cada review ou pedido concluído.';
+COMMENT ON FUNCTION public.atualizar_estatisticas_usuario(INTEGER)
+IS
+'Recalcula a média de avaliações, o total de avaliações e o total de pedidos concluídos do usuário.';
 
--- Alias histórico mantido para bancos e integrações antigas.
-CREATE OR REPLACE FUNCTION update_user_stats(p_user_id INTEGER)
-RETURNS VOID AS $$
+
+-- ============================================================
+-- Alias de compatibilidade
+-- ============================================================
+
+DROP FUNCTION IF EXISTS public.update_user_stats(INTEGER);
+
+CREATE FUNCTION public.update_user_stats(
+  p_usuario_id INTEGER
+)
+RETURNS VOID
+LANGUAGE plpgsql
+AS $$
 BEGIN
-  PERFORM atualizar_estatisticas_usuario(p_user_id);
+  PERFORM public.atualizar_estatisticas_usuario(p_usuario_id);
 END;
-$$ LANGUAGE plpgsql;
+$$;
+
+COMMENT ON FUNCTION public.update_user_stats(INTEGER)
+IS
+'Alias de compatibilidade para atualizar_estatisticas_usuario.';
+
+
+-- ============================================================
+-- Atualiza as estatísticas dos trabalhadores existentes
+-- ============================================================
+
+SELECT public.atualizar_estatisticas_usuario(u.id)
+FROM public.usuarios AS u
+WHERE u.modo = 'worker';
