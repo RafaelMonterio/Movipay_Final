@@ -1,33 +1,127 @@
 const jwt = require('jsonwebtoken');
+const { consultarBanco } = require('../banco/conexao');
+const { ErroApi } = require('./tratamentoErros');
 
-// Sem isto, o app SILENCIOSAMENTE assinava e validava tokens com uma string fixa (a mesma que aparece no .env.example, publicada junto do código) sem...
-if (!process.env.JWT_SECRET) {
-  throw new Error(
-    'JWT_SECRET não está definida no ambiente. Configure-a no .env (veja .env.example) antes de iniciar o servidor — ' +
-      'o backend recusa subir sem isso de propósito, para nunca rodar em produção com uma chave previsível.'
+function signToken(dados) {
+  if (!process.env.JWT_SECRET) {
+    console.error(
+      'JWT_SECRET não foi configurado no arquivo .env.'
+    );
+
+    throw new ErroApi(
+      500,
+      'A chave de autenticação da API não foi configurada.'
+    );
+  }
+
+  const carga =
+    typeof dados === 'object' && dados !== null
+      ? dados
+      : { id: dados };
+
+  return jwt.sign(
+    carga,
+    process.env.JWT_SECRET,
+    {
+      expiresIn:
+        process.env.JWT_EXPIRES_IN || '30d',
+    }
   );
 }
-const SECRET = process.env.JWT_SECRET;
-// 30 dias: sessão longa, adequada a um app mobile (o site original usa 7d).
-const EXPIRES_IN = process.env.JWT_EXPIRES_IN || '30d';
 
-function signToken(user) {
-  return jwt.sign({ id: user.id, email: user.email, modo: user.modo }, SECRET, { expiresIn: EXPIRES_IN });
-}
-
-// Protege uma rota exigindo "Authorization: Bearer <token>". req.user fica com { id, email, modo, iat, exp } — qualquer outro campo do perfil (catego...
-function intermediarioAutenticacao(req, res, next) {
-  const header = req.headers.authorization || '';
-  const [, token] = header.split(' ');
-  if (!token) {
-    return res.status(401).json({ error: { mensagem: 'Token de autenticação ausente.' } });
-  }
+async function intermediarioAutenticacao(req, res, next) {
   try {
-    req.user = jwt.verify(token, SECRET);
+    const cabecalhoAutorizacao =
+      req.headers.authorization || '';
+
+    if (!cabecalhoAutorizacao.startsWith('Bearer ')) {
+      throw new ErroApi(
+        401,
+        'Token de autenticação não informado.'
+      );
+    }
+
+    const token = cabecalhoAutorizacao
+      .slice('Bearer '.length)
+      .trim();
+
+    if (!token) {
+      throw new ErroApi(
+        401,
+        'Token de autenticação não informado.'
+      );
+    }
+
+    if (!process.env.JWT_SECRET) {
+      console.error(
+        'JWT_SECRET não foi configurado no arquivo .env.'
+      );
+
+      throw new ErroApi(
+        500,
+        'A chave de autenticação da API não foi configurada.'
+      );
+    }
+
+    let dadosToken;
+
+    try {
+      dadosToken = jwt.verify(
+        token,
+        process.env.JWT_SECRET
+      );
+    } catch (erroToken) {
+      console.error(
+        'Token JWT inválido:',
+        erroToken.message
+      );
+
+      throw new ErroApi(
+        401,
+        'Token inválido ou expirado. Faça login novamente.'
+      );
+    }
+
+    const idUsuario =
+      dadosToken.id ||
+      dadosToken.usuario_id ||
+      dadosToken.usuarioId ||
+      dadosToken.userId ||
+      dadosToken.sub;
+
+    if (!idUsuario) {
+      throw new ErroApi(
+        401,
+        'O token não possui a identificação do usuário.'
+      );
+    }
+
+    const resultado = await consultarBanco(
+      `SELECT *
+       FROM usuarios
+       WHERE id = $1`,
+      [idUsuario]
+    );
+
+    const usuario = resultado.rows[0];
+
+    if (!usuario) {
+      throw new ErroApi(
+        401,
+        'O usuário do token não foi encontrado.'
+      );
+    }
+
+    req.usuario = usuario;
+    req.user = usuario;
+
     return next();
-  } catch {
-    return res.status(401).json({ error: { mensagem: 'Token inválido ou expirado.' } });
+  } catch (erro) {
+    return next(erro);
   }
 }
 
-module.exports = { signToken, intermediarioAutenticacao, SECRET };
+module.exports = {
+  signToken,
+  intermediarioAutenticacao,
+};
