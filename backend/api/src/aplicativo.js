@@ -4,6 +4,8 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const swaggerUi = require('swagger-ui-express');
+const swaggerDocument = require('./documentacao/swagger');
 const path = require('path');
 
 const { grupoConexoes } = require('./banco/conexao');
@@ -35,6 +37,14 @@ const { descreverConfiguracao } = require('./servicos/pagamentos');
 const { expirarAssinaturasVencidas } = require('./servicos/processamentoPagamentos');
 
 const app = express();
+app.use(
+  '/api-docs',
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerDocument, {
+    explorer: true,
+    customSiteTitle: 'MoviPay API',
+  })
+);
 
 // Cabeçalhos de segurança padrão. CSP desligado de propósito: esta API só devolve JSON e arquivos de mídia — CSP é para páginas HTML, e uma política...
 app.use(
