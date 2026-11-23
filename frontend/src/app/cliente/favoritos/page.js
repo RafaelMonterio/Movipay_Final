@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import LayoutPainel from '@/componentes/layout/LayoutPainel';
 import api from '@/servicos/clienteApi';
 import { usarTema, obterCoresTema } from '@/contexto/contextoTema';
@@ -11,6 +12,7 @@ export default function FavoritosPage() {
   const { darkMode } = usarTema();
   const cores = obterCoresTema(darkMode);
   const toast = useToast();
+  const router = useRouter();
   const [favoritos, setFavoritos] = useState([]);
   const [carregando, setCarregando] = useState(true);
 
@@ -24,6 +26,7 @@ export default function FavoritosPage() {
     } finally { setCarregando(false); }
   }
   useEffect(() => { carregar(); }, []);
+  useEffect(() => { router.replace('/cliente'); }, [router]);
 
   async function remover(id) {
     try { await api.delete(`/favoritos/${id}`); setFavoritos(lista => lista.filter(item => String(item.trabalhador_id) !== String(id))); toast('Profissional removido dos favoritos.', 'success'); }

@@ -118,7 +118,7 @@ function AnimatedCounter({ target, suffix = '', decimal = false }) {
 }
 
 /* ─── MAPA REPOSICIONADO À ESQUERDA COM DESIGN ORGÂNICO FUTURISTA ─────── */
-function OrganicMap({ themeColors, workers, recentCompletedServices, searchQuery, setSearchQuery, onSearchSubmit }) {
+function OrganicMap({ themeColors, workers, recentCompletedServices, searchQuery, setSearchQuery, onSearchSubmit, center = CENTRO_CIDADE_PADRAO }) {
   const router = useRouter();
   const [selectedWorker, setSelectedWorker] = useState(null);
 
@@ -299,6 +299,7 @@ function OrganicMap({ themeColors, workers, recentCompletedServices, searchQuery
           {/* Componente do Mapa Leaflet */}
           <MapaProfissionais
             workers={workers}
+            center={center}
             onSelectWorker={setSelectedWorker}
             selectedWorkerId={selectedWorker?.id}
             height="100%"
@@ -652,9 +653,23 @@ export default function ClientDashboardPage() {
   }
 
   /* Favoritos — sempre a partir dos profissionais reais */
-  const [favoriteIds, setFavoriteIds] = useState([2, 4, 5]);
-  function toggleFavorite(id) {
-    setFavoriteIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  const [favoriteIds, setFavoriteIds] = useState([]);
+
+  useEffect(() => {
+    api.get('/favoritos')
+      .then(r => setFavoriteIds((r.data?.favoritos || []).map(item => Number(item.trabalhador_id))))
+      .catch(() => setFavoriteIds([]));
+  }, []);
+
+  async function toggleFavorite(id) {
+    const wasFavorite = favoriteIds.includes(id);
+    setFavoriteIds(prev => wasFavorite ? prev.filter(x => x !== id) : [...prev, id]);
+    try {
+      if (wasFavorite) await api.delete(`/favoritos/${id}`);
+      else await api.post(`/favoritos/${id}`);
+    } catch {
+      setFavoriteIds(prev => wasFavorite ? [...prev, id] : prev.filter(x => x !== id));
+    }
   }
   const favorites = workers.filter(w => favoriteIds.includes(w.id));
 
@@ -999,6 +1014,7 @@ export default function ClientDashboardPage() {
               <OrganicMap
                 themeColors={colors}
                 workers={workers}
+                center={Number.isFinite(Number(user?.lat)) && Number.isFinite(Number(user?.lng)) ? [Number(user.lat), Number(user.lng)] : CENTRO_CIDADE_PADRAO}
                 recentCompletedServices={recentCompletedServices}
                 searchQuery={searchQuery}
                 setSearchQuery={setSearchQuery}

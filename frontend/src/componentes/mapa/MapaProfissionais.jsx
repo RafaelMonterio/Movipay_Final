@@ -130,16 +130,16 @@ export default function MapaProfissionais({ workers = [], center = CENTRO_CIDADE
       // API (Esri "Light Gray Canvas"). O antigo provedor (CARTO) passou a
       // exigir uma API key para o tile raster e, sem ela, exibia a
       // marca d'água "API KEY REQUIRED" por cima do mapa.
-      L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/servicos/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
-        maxZoom: 16,
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
         minZoom: 3,
-        attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ',
+        attribution: '&copy; OpenStreetMap contributors',
+        crossOrigin: true,
       }).addTo(map);
-      L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/servicos/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}', {
-        maxZoom: 16,
-        minZoom: 3,
-        pane: 'shadowPane', // fica acima do base, abaixo dos marcadores
-      }).addTo(map);
+
+      map.getContainer().style.background =
+        'linear-gradient(90deg, rgba(148,163,184,.12) 1px, transparent 1px), linear-gradient(rgba(148,163,184,.12) 1px, transparent 1px), #f1f5f9';
+      map.getContainer().style.backgroundSize = '24px 24px';
 
       // Pin da localização atual (centro)
       const userIcon = L.divIcon({

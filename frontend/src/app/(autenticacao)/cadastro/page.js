@@ -8,7 +8,7 @@ import { usarFormulario, rules } from '@/ganchos/usarFormulario';
 import { usarTema, obterCoresTema } from '@/contexto/contextoTema';
 import FolhasCaindo from '@/componentes/efeitos/FolhasCaindo';
 import SharedIcon from '@/componentes/interface/Icone';
-import { CITY_NAME, coordsForNeighborhood, lookupCep, formatCep, isSameCity } from '@/utilitarios/localizacoes';
+import { CITY_NAME, geocodeAddress, lookupCep, formatCep, isSameCity } from '@/utilitarios/localizacoes';
 
 const STEP_LABELS = { dados: 'Dados', perfil: 'Perfil', detalhes: 'Detalhes', servicos: 'Serviços', termos: 'Termos' };
 
@@ -292,10 +292,32 @@ function AddressFields({ form, theme }) {
     form.handleChange('street', r.street);
     form.handleChange('neighborhood', r.neighborhood);
     form.handleChange('city', r.city);
-    const [lat, lng] = coordsForNeighborhood(r.neighborhood);
+
+    const [lat, lng] = await geocodeAddress({
+      street: r.street,
+      neighborhood: r.neighborhood,
+      city: r.city,
+      state: r.state,
+      cep: formatted,
+    });
     form.handleChange('lat', lat); form.handleChange('lng', lng);
     setStatus('found');
   }
+
+  async function handleAddressNumberChange(value) {
+    form.handleChange('addressNumber', value);
+    if (!value || !form.values.street) return;
+    const [lat, lng] = await geocodeAddress({
+      street: form.values.street,
+      addressNumber: value,
+      neighborhood: form.values.neighborhood,
+      city: form.values.city,
+      state: 'SP',
+      cep: form.values.cep,
+    });
+    form.handleChange('lat', lat); form.handleChange('lng', lng);
+  }
+
   const bad = status === 'not-found' || status === 'wrong-city';
 
   return (
@@ -316,7 +338,7 @@ function AddressFields({ form, theme }) {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
         <div>
           <label style={{ fontSize: '0.8rem', fontWeight: 700, color: theme.text, display: 'block', marginBottom: 6 }}>Número</label>
-          <input value={form.values.addressNumber} onChange={e => form.handleChange('addressNumber', e.target.value)} placeholder="Ex: 123" style={{ ...box, border: `1.5px solid ${theme.line}` }} />
+          <input value={form.values.addressNumber} onChange={e => handleAddressNumberChange(e.target.value)} placeholder="Ex: 123" style={{ ...box, border: `1.5px solid ${theme.line}` }} />
         </div>
         <div>
           <label style={{ fontSize: '0.8rem', fontWeight: 700, color: theme.text, display: 'block', marginBottom: 6 }}>Complemento <span style={{ color: theme.textMuted, fontWeight: 500 }}>(opcional)</span></label>
@@ -513,8 +535,18 @@ export default function RegisterPage() {
       if (!input) return;
       if (document.activeElement !== input) {
         input.focus();
-        const len = input.value?.length || 0;
-        input.setSelectionRange?.(len, len);
+
+        // setSelectionRange só existe para tipos que aceitam texto editável.
+        // Chamá-lo em email, date, number etc. lança InvalidStateError no navegador.
+        const selectionTypes = ['text', 'search', 'url', 'tel', 'password'];
+        if (selectionTypes.includes(input.type)) {
+          try {
+            const len = input.value?.length || 0;
+            input.setSelectionRange?.(len, len);
+          } catch {
+            // Navegadores podem restringir a seleção mesmo em tipos normalmente suportados.
+          }
+        }
       }
     });
   }

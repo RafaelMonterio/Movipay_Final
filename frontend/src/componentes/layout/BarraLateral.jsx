@@ -10,7 +10,7 @@ const clientLinks = [
   { href: '/cliente', icon: Home, label: 'Início' },
   { href: '/cliente/servicos', icon: Search, label: 'Serviços' },
   { href: '/cliente/orcamentos', icon: ClipboardList, label: 'Orçamentos' },
-  { href: '/cliente/favoritos', icon: Heart, label: 'Favoritos' },
+  { href: '/cliente/pedidos', icon: CalendarDays, label: 'Pedidos' },
   { href: '/cliente/publicacoes', icon: PlayCircle, label: 'Shorts' },
   { href: '/cliente/conversas', icon: MessageCircle, label: 'Chat' },
   { href: '/cliente/pontos', icon: Coins, label: 'Folhas' },
@@ -38,7 +38,7 @@ export default function BarraLateral() {
   const { darkMode, highContrast } = usarTema();
   const isWorker = user?.mode === 'worker';
   const links = isWorker ? workerLinks : clientLinks;
-  const mobileLinks = isWorker ? workerLinks.slice(0, 5) : [clientLinks[0], clientLinks[1], clientLinks[2], clientLinks[3], clientLinks[4]];
+  const mobileLinks = isWorker ? workerLinks.slice(0, 5) : [clientLinks[0], clientLinks[1], clientLinks[2], clientLinks[3], clientLinks[5]];
 
   // Compute colors based on accessibility state — always derived from the
   // same palette used by the rest of the app (obterCoresTema), so the

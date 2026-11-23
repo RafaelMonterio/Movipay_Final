@@ -37,6 +37,27 @@ export async function lookupCep(cep) {
   } catch { return null; }
 }
 
+/** Resolve o endereço completo em coordenadas usando o OpenStreetMap/Nominatim. */
+export async function geocodeAddress({ street = '', neighborhood = '', city = CITY_NAME, state = 'SP', addressNumber = '', cep = '' }) {
+  const parts = [street, addressNumber, neighborhood, city, state, 'Brasil'].filter(Boolean);
+  const fallbackQuery = [neighborhood || street, city, state, 'Brasil'].filter(Boolean).join(', ');
+  const queries = [parts.join(', '), fallbackQuery];
+
+  for (const query of queries) {
+    try {
+      const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=br&accept-language=pt-BR&q=${encodeURIComponent(query)}${cep ? `&postalcode=${encodeURIComponent(cep.replace(/\D/g, ''))}` : ''}`;
+      const res = await fetch(url, { headers: { 'Accept-Language': 'pt-BR' } });
+      if (!res.ok) continue;
+      const rows = await res.json();
+      if (rows?.[0]?.lat && rows?.[0]?.lon) {
+        return [Number(rows[0].lat), Number(rows[0].lon)];
+      }
+    } catch {}
+  }
+
+  return coordsForNeighborhood(neighborhood);
+}
+
 export function formatCep(value) {
   const c = (value || '').replace(/\D/g, '').slice(0, 8);
   return c.length > 5 ? `${c.slice(0, 5)}-${c.slice(5)}` : c;

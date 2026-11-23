@@ -500,9 +500,6 @@ function EditForm({ profile, form, onSave, onCancel, saving, theme, userMode }) 
 function ActionsCard({ user, alternarModo, sair, theme, router }) {
   const actions = [
     { icon: 'swap', label: 'Trocar para trabalhador', desc: 'Ofereça seus serviços', onClick: () => alternarModo('worker'), color: '#FF7A00', bg: 'rgba(255,122,0,0.1)' },
-    { icon: 'briefcase', label: 'Meus pedidos', desc: 'Acompanhe seus serviços', onClick: () => router.push('/cliente/pedidos'), color: '#22D31B', bg: 'rgba(34,211,27,0.1)' },
-    { icon: 'settings', label: 'Configurações', desc: 'Privacidade e segurança', onClick: () => {}, color: '#3B82F6', bg: 'rgba(59,130,246,0.1)' },
-    { icon: 'shield', label: 'Central de ajuda', desc: 'Dúvidas e suporte', onClick: () => {}, color: '#22D31B', bg: 'rgba(34,211,27,0.1)' },
   ];
 
   return (
@@ -779,28 +776,8 @@ export default function ClientProfilePage() {
               {achievements.map((ach, i) => (
                 <AchievementCard key={ach.id} achievement={ach} index={i} theme={theme} />
               ))}
-            </div>
+                       </div>
           </div>
-
-          {/* Tips card */}
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4, duration: 0.5 }}
-            style={{ padding: 20, borderRadius: 18, background: 'linear-gradient(135deg, rgba(255,122,0,0.08), rgba(34,211,27,0.08))', border: `1px solid ${theme.line}` }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-              <div style={{ width: 36, height: 36, borderRadius: 10, background: 'linear-gradient(135deg, #FF7A00, #22D31B)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Icon name="sparkle" size={18} color="#fff" />
-              </div>
-              <h3 style={{ fontFamily: 'var(--display)', fontWeight: 700, fontSize: '0.95rem', color: theme.text, margin: 0 }}>
-                Dica para ganhar pontos
-              </h3>
-            </div>
-            <p style={{ fontSize: '0.82rem', color: theme.text, lineHeight: 1.6, margin: 0 }}>
-              Cada pedido concluído rende <strong style={{ color: '#FF7A00' }}>100 pontos</strong>. Avalie seus profissionais e ganhe bônus extras! Use seus pontos como desconto nos próximos serviços.
-            </p>
-          </motion.div>
         </div>
       </div>
     </LayoutPainel>

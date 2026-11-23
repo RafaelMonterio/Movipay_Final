@@ -85,6 +85,12 @@ function tratarRotaSimulada(config) {
       accepted_terms: !!(data.terms_accepted ?? data.accepted_terms),
       terms_version: data.terms_version || '2026.09.23',
       accepted_terms_at: data.accepted_terms_at || new Date().toISOString(),
+      lat: data.lat != null ? Number(data.lat) : null,
+      lng: data.lng != null ? Number(data.lng) : null,
+      cep: data.cep || data.cep || '',
+      street: data.street || data.rua || '',
+      addressNumber: data.addressNumber || data.numero || '',
+      complement: data.complement || data.complemento || '',
     };
 
     const db = JSON.parse(localStorage.getItem('movipay_users_db') || '{}');
@@ -308,6 +314,34 @@ function tratarRotaSimulada(config) {
   // /avaliacoes
   if (url === '/avaliacoes' && method === 'post') {
     return { id: Date.now(), ...data };
+  }
+
+  // /favoritos — lista e manutenção persistente no navegador
+  if (url === '/favoritos' && method === 'get') {
+    const ids = JSON.parse(localStorage.getItem('movipay_favorites') || '[]').map(String);
+    const favoritos = bancoSimulado.listarProfissionais()
+      .filter(worker => ids.includes(String(worker.id)))
+      .map(worker => ({
+        trabalhador_id: worker.id,
+        nome: worker.name,
+        nome_categoria: worker.category,
+        categoria: worker.category,
+        url_avatar: worker.avatar_url || worker.photo,
+        media_avaliacao: worker.avg_rating || 0,
+        esta_disponivel: worker.is_available !== false,
+      }));
+    return { favoritos };
+  }
+
+  const favoriteMatch = url.match(/^\/favoritos\/([^/]+)$/);
+  if (favoriteMatch && (method === 'post' || method === 'delete')) {
+    const id = String(favoriteMatch[1]);
+    const ids = JSON.parse(localStorage.getItem('movipay_favorites') || '[]').map(String);
+    const next = method === 'post'
+      ? Array.from(new Set([...ids, id]))
+      : ids.filter(existing => existing !== id);
+    localStorage.setItem('movipay_favorites', JSON.stringify(next));
+    return { success: true };
   }
 
   return { success: true };

@@ -86,6 +86,7 @@ export default function WorkerDetailPage() {
   const [bookingOpen, setBookingOpen] = useState(false);
   const [contractOpen, setContractOpen] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState(null);
+  const [isFavorite, setIsFavorite] = useState(false);
   // Booking defaults (use ISO date for selectedDate to avoid format mismatch)
   const TODAY = new Date();
   const ISO_TODAY = `${TODAY.getFullYear()}-${String(TODAY.getMonth() + 1).padStart(2, '0')}-${String(TODAY.getDate()).padStart(2, '0')}`;
@@ -121,6 +122,27 @@ export default function WorkerDetailPage() {
       .catch(() => setWorker(null))
       .finally(() => setLoading(false));
   }, [params?.id]);
+
+  useEffect(() => {
+    api.get('/favoritos')
+      .then(r => {
+        const ids = (r.data?.favoritos || []).map(item => String(item.trabalhador_id));
+        setIsFavorite(ids.includes(String(params?.id)));
+      })
+      .catch(() => setIsFavorite(false));
+  }, [params?.id]);
+
+  async function toggleFavorite() {
+    if (!worker?.id) return;
+    const next = !isFavorite;
+    setIsFavorite(next);
+    try {
+      if (next) await api.post(`/favoritos/${worker.id}`);
+      else await api.delete(`/favoritos/${worker.id}`);
+    } catch {
+      setIsFavorite(!next);
+    }
+  }
 
   if (loading) {
     return (
@@ -183,6 +205,13 @@ export default function WorkerDetailPage() {
             <div className="flex items-center gap-2 flex-wrap">
               <button
                 type="button"
+                onClick={toggleFavorite}
+                className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all border ${isFavorite ? 'bg-red-50 border-red-200 text-red-600' : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'}`}
+              >
+                {isFavorite ? '♥ Favoritado' : '♡ Favoritar trabalhador'}
+              </button>
+              <button
+                type="button"
                 onClick={() => router.push(`/cliente/conversas?worker=${worker.id}`)}
                 className="border border-slate-200 bg-white text-slate-700 px-4 py-2 rounded-xl text-sm font-semibold hover:bg-slate-50 transition-all"
               >
@@ -221,6 +250,14 @@ export default function WorkerDetailPage() {
                   </div>
                 </div>
 
+                <button
+                  type="button"
+                  onClick={toggleFavorite}
+                  className={`self-start rounded-full p-2 transition-all ${isFavorite ? 'bg-red-100 text-red-600' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                  aria-label={isFavorite ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
+                >
+                  <Icon name={isFavorite ? 'heart' : 'heartOutline'} size={20} />
+                </button>
               </div>
             </div>
           </motion.section>
@@ -270,7 +307,7 @@ export default function WorkerDetailPage() {
                 </div>
               </motion.section>
 
-              <motion.section initial={{ opacity:0, y:16 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.15 }} className="bg-white rounded-3xl border border-slate-200 p-5 md:p-6">
+              <motion.section initial={{ opacity:0, y:16 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.15 }} className="bg-white rounded-2xl border border-slate-200 p-5 md:p-6">
                 <div className="flex items-center justify-between gap-3 mb-4">
                   <h2 className="text-lg font-black text-slate-800">Portfólio</h2>
                   <span className="text-xs text-slate-500">Últimos projetos</span>
@@ -293,7 +330,7 @@ export default function WorkerDetailPage() {
                 </div>
               </motion.section>
 
-              <motion.section initial={{ opacity:0, y:16 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.2 }} className="bg-white rounded-3xl border border-slate-200 p-5 md:p-6">
+              <motion.section initial={{ opacity:0, y:16 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.2 }} className="bg-white rounded-2xl border border-slate-200 p-5 md:p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-lg font-black text-slate-800">Trabalhos recentes</h2>
                   <span className="text-xs text-slate-500">Últimos 3</span>
@@ -311,7 +348,7 @@ export default function WorkerDetailPage() {
                 </div>
               </motion.section>
 
-              <motion.section initial={{ opacity:0, y:16 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.22 }} className="bg-white rounded-3xl border border-slate-200 p-5 md:p-6">
+              <motion.section initial={{ opacity:0, y:16 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.22 }} className="bg-white rounded-2xl border border-slate-200 p-5 md:p-6">
                 <h2 className="text-lg font-black text-slate-800 mb-4">Histórico de serviços</h2>
                 <div className="space-y-4">
                   {workHistory.map((item, index) => (
@@ -332,7 +369,7 @@ export default function WorkerDetailPage() {
                 </div>
               </motion.section>
 
-              <motion.section initial={{ opacity:0, y:16 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.25 }} className="bg-white rounded-3xl border border-slate-200 p-5 md:p-6">
+              <motion.section initial={{ opacity:0, y:16 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.25 }} className="bg-white rounded-2xl border border-slate-200 p-5 md:p-6">
                 <h2 className="text-lg font-black text-slate-800 mb-4">Avaliações</h2>
                 <div className="space-y-3">
                   {(worker.reviews || []).slice(0, 4).map(review => (
