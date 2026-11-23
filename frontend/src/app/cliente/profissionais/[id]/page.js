@@ -181,10 +181,12 @@ export default function WorkerDetailPage() {
   // Conteúdo ilustrativo genérico (não são pessoas/pedidos fictícios — apenas
   // exemplos de layout, já que o backend real ainda não expõe portfólio e
   // histórico detalhado por profissional).
-  const portfolio = worker.portfolio || [
-    { id: 1, title: 'Trabalho recente', type: 'Antes e depois', image: 'linear-gradient(135deg, #f59e0b, #f97316)' },
-    { id: 2, title: 'Trabalho recente', type: 'Antes e depois', image: 'linear-gradient(135deg, #22C55E, #16A34A)' },
-  ];
+  const portfolio = (worker.portfolio || worker.photos || []).map((item, index) => ({
+    id: item.id || index,
+    title: item.title || item.caption || 'Trabalho realizado',
+    type: item.type || 'Foto do portfólio',
+    image: item.image || item.url || '',
+  }));
   const recentJobs = (worker.total_orders || 0) > 0
     ? [{ title: services[0]?.title || 'Serviço concluído', status: 'Concluído', value: services[0]?.price ? formatarMoeda(services[0].price) : '—', date: 'Recente' }]
     : [];
@@ -320,7 +322,11 @@ export default function WorkerDetailPage() {
                       onClick={() => setSelectedPhoto(item)}
                       className="rounded-2xl overflow-hidden border border-slate-200 bg-slate-50 text-left transition-all hover:border-client/30 hover:shadow-sm"
                     >
-                      <div className="h-32" style={{ background: item.image }} />
+                      {item.image ? (
+                        <img src={item.image} alt={item.title} className="h-32 w-full object-cover" />
+                      ) : (
+                        <div className="h-32 bg-gradient-to-br from-amber-400 to-emerald-500" />
+                      )}
                       <div className="p-3">
                         <p className="font-semibold text-slate-800 text-sm">{item.title}</p>
                         <p className="text-xs text-slate-500 mt-1">{item.type}</p>
@@ -476,7 +482,7 @@ export default function WorkerDetailPage() {
               {getAvailableSlotsForDate(selectedDate).length === 0 ? (
                 <div className="text-sm text-slate-500">Sem horários disponíveis para esta data.</div>
               ) : (
-                getAvailableSlotsForDate(selectedDate).map((slot) => (
+                getAvailableSlotsForDate(selectedDate).map(slot => (
                   <button
                     key={slot}
                     type="button"
@@ -496,8 +502,8 @@ export default function WorkerDetailPage() {
             <p className="text-sm font-semibold text-slate-700 mb-2">3. Tipo de serviço</p>
             <div className="space-y-2">
               {[
-                { id: 'Completo', title: 'Serviço completo', description: 'Tudo incluso e atendimento total', price: services?.[0] ? formatarMoeda(services[0].price) : 'Sob consulta' },
-                { id: 'Básico', title: 'Básico', description: 'Atendimento essencial com foco no necessário', price: 'R$ 120,00' },
+                { id: 'Completo', title: 'Serviço completo', description: 'Tudo incluido e atendimento total', price: services?.[0] ? formatarMoeda(services[0].price) : 'Sob consulta' },
+                { id: 'Basico', title: 'Básico', description: 'Atendimento essencial com foco no necessário', price: 'R$ 120,00' },
                 { id: 'Premium', title: 'Premium', description: 'Mais cuidado, revisão e acabamento refinado', price: 'R$ 220,00' },
               ].map((option) => (
                 <button
@@ -609,7 +615,11 @@ export default function WorkerDetailPage() {
       <Modal open={!!selectedPhoto} onClose={() => setSelectedPhoto(null)} title={selectedPhoto?.title || 'Projeto'} size="lg">
         {selectedPhoto && (
           <div className="space-y-4">
-            <div className="h-72 rounded-2xl" style={{ background: selectedPhoto.image }} />
+            {selectedPhoto.image ? (
+              <img src={selectedPhoto.image} alt={selectedPhoto.title} className="h-72 w-full object-contain rounded-2xl bg-slate-100" />
+            ) : (
+              <div className="h-72 rounded-2xl bg-gradient-to-br from-amber-400 to-emerald-500" />
+            )}
             <div>
               <p className="text-lg font-black text-slate-800">{selectedPhoto.title}</p>
               <p className="text-sm text-slate-500 mt-1">{selectedPhoto.type}</p>

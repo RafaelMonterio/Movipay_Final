@@ -215,7 +215,27 @@ function tratarRotaSimulada(config) {
   // /profissionais/:id
   const workerDetailMatch = url.match(/^\/profissionais\/([^/]+)$/);
   if (workerDetailMatch && method === 'get') {
-    return bancoSimulado.obterProfissionalPorId(workerDetailMatch[1]);
+    const worker = bancoSimulado.obterProfissionalPorId(workerDetailMatch[1]);
+    if (!worker) return null;
+    const portfolios = JSON.parse(localStorage.getItem('movipay_portfolios') || '{}');
+    const storedPhotos = portfolios[String(worker.id)] || [];
+    const registrationPhotos = (worker.portfolio || []).map((item, index) => ({
+      id: `cadastro-${index}`,
+      url: typeof item === 'string' ? item : item.url,
+      caption: typeof item === 'object' ? item.caption : 'Trabalho realizado',
+    })).filter(item => item.url);
+    const photos = [...storedPhotos, ...registrationPhotos];
+    return {
+      ...worker,
+      photos,
+      portfolio: photos.map(photo => ({
+        id: photo.id,
+        title: photo.caption || 'Trabalho realizado',
+        type: 'Foto do portfólio',
+        image: photo.url,
+        url: photo.url,
+      })),
+    };
   }
 
   // /profissionais/:id/disponibilidade
@@ -224,11 +244,22 @@ function tratarRotaSimulada(config) {
   }
 
   // /profissionais/:id/portfolio
-  if (url.match(/^\/profissionais\/[^/]+\/portfolio$/) && method === 'post') {
-    return { id: Date.now(), url: data.url || '' };
+  const portfolioPostMatch = url.match(/^\/profissionais\/([^/]+)\/portfolio$/);
+  if (portfolioPostMatch && method === 'post') {
+    const workerId = portfolioPostMatch[1];
+    const portfolios = JSON.parse(localStorage.getItem('movipay_portfolios') || '{}');
+    const photo = { id: Date.now(), url: data.url || '', caption: data.caption || 'Trabalho realizado' };
+    portfolios[workerId] = [photo, ...(portfolios[workerId] || [])];
+    localStorage.setItem('movipay_portfolios', JSON.stringify(portfolios));
+    return photo;
   }
 
-  if (url.match(/^\/profissionais\/[^/]+\/portfolio\/[^/]+$/) && method === 'delete') {
+  const portfolioDeleteMatch = url.match(/^\/profissionais\/([^/]+)\/portfolio\/([^/]+)$/);
+  if (portfolioDeleteMatch && method === 'delete') {
+    const [, workerId, photoId] = portfolioDeleteMatch;
+    const portfolios = JSON.parse(localStorage.getItem('movipay_portfolios') || '{}');
+    portfolios[workerId] = (portfolios[workerId] || []).filter(photo => String(photo.id) !== String(photoId));
+    localStorage.setItem('movipay_portfolios', JSON.stringify(portfolios));
     return { success: true };
   }
 
@@ -342,6 +373,34 @@ function tratarRotaSimulada(config) {
       : ids.filter(existing => existing !== id);
     localStorage.setItem('movipay_favorites', JSON.stringify(next));
     return { success: true };
+  }
+
+  // /publicacoes — Shorts derivados dos portfólios reais dos trabalhadores
+  if (url === '/publicacoes' && method === 'get') {
+    const portfolios = JSON.parse(localStorage.getItem('movipay_portfolios') || '{}');
+    const publicacoes = bancoSimulado.listarProfissionais().flatMap(worker => {
+      const stored = portfolios[String(worker.id)] || [];
+      const registered = (worker.portfolio || []).map((item, index) => ({
+        id: `cadastro-${index}`,
+        url: typeof item === 'string' ? item : item.url,
+        caption: typeof item === 'object' ? item.caption : 'Trabalho realizado',
+      })).filter(item => item.url);
+      return [...stored, ...registered].map((photo, index) => {
+        const url = photo.url;
+        const isVideo = typeof url === 'string' && (url.startsWith('data:video') || /\.(mp4|webm|mov)(\?|$)/i.test(url));
+        return {
+          id: `${worker.id}-${photo.id}`,
+          tipo: isVideo ? 'video' : 'image',
+          nome_trabalhador: worker.name,
+          caption: photo.caption || 'Trabalho realizado',
+          media_urls: [url],
+          url_miniatura: url,
+          criado_em: new Date(Date.now() - index * 86400000).toISOString(),
+        };
+      });
+    });
+    const tipo = config.params?.tipo;
+    return { publicacoes: tipo && tipo !== 'todos' ? publicacoes.filter(item => item.tipo === tipo) : publicacoes };
   }
 
   return { success: true };

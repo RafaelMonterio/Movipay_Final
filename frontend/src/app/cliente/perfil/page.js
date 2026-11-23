@@ -645,7 +645,7 @@ export default function ClientProfilePage() {
 
       {/* Carteira de Folhas: saldo aplicado diretamente como desconto no agendamento */}
       <div className="profile-page-content">
-      <div id="folhas" className="client-wide-page" style={{ position: 'relative', zIndex: 1, padding: '24px 24px 0', maxWidth: 'none', margin: '0 auto', fontFamily: 'var(--body)', scrollMarginTop: 80 }}>
+      <div id="folhas" className="client-wide-page" style={{ display: 'none' }}>
         <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
           style={{ display: 'grid', gridTemplateColumns: '1.1fr 1fr', gap: 20 }} className="folhas-grid">
 
@@ -679,39 +679,50 @@ export default function ClientProfilePage() {
         </motion.div>
       </div>
 
+        {/* Carteira detalhada */}
+        <div style={{ padding: 20, borderRadius: 18, background: theme.cardBg, border: `1px solid ${theme.cardBorder}` }}>
+          <p style={{ margin: '0 0 10px', fontFamily: 'var(--display)', fontWeight: 800, color: theme.text }}>Carteira de Folhas</p>
+          <p style={{ margin: 0, fontSize: '0.82rem', color: theme.textMuted }}>≈ <strong style={{ color: '#22D31B' }}>{formatarMoeda(folhasDesconto)}</strong> em desconto acumulado</p>
+          <p style={{ margin: '8px 0 0', fontSize: '0.72rem', color: theme.textMuted }}>Use suas Folhas no agendamento de um serviço.</p>
+        </div>
+
         {/* histórico de folhas */}
-        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
-          style={{ background: theme.cardBg, border: `1px solid ${theme.cardBorder}`, borderRadius: 22, padding: 22, marginTop: 20 }}>
-          <p style={{ fontFamily: 'var(--display)', fontWeight: 700, fontSize: '0.95rem', color: theme.text, marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
-            <Icon name="clock2" size={17} color="#FF7A00" /> Histórico de Folhas
-          </p>
+        <div style={{ background: theme.cardBg, border: `1px solid ${theme.cardBorder}`, borderRadius: 18, padding: 20 }}>
+          <p style={{ margin: '0 0 12px', fontWeight: 800, color: theme.text, display: 'flex', alignItems: 'center', gap: 8 }}><Icon name="clock2" size={16} color="#FF7A00" /> Histórico de Folhas</p>
           {folhasHistory.length === 0 ? (
-            <p style={{ fontSize: '0.8rem', color: theme.textMuted }}>Nenhuma movimentação ainda.</p>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {folhasHistory.map((t, i) => {
-                const amount = t.amount ?? t.points ?? 0;
-                return (
-                  <motion.div key={t.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}
-                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 4px', borderBottom: i < folhasHistory.length - 1 ? `1px solid ${theme.line}` : 'none' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
-                      <div style={{ width: 30, height: 30, borderRadius: 9, background: amount >= 0 ? 'rgba(34,211,27,0.12)' : 'rgba(255,59,92,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                        <Icon name="leaf" size={14} color={amount >= 0 ? '#22D31B' : '#FF3B5C'} />
-                      </div>
-                      <div style={{ minWidth: 0 }}>
-                        <p style={{ fontSize: '0.8rem', fontWeight: 700, color: theme.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t.description}</p>
-                        <p style={{ fontSize: '0.68rem', color: theme.textMuted }}>{formatarData(t.created_at)}</p>
-                      </div>
-                    </div>
-                    <span style={{ fontSize: '0.85rem', fontWeight: 800, color: amount >= 0 ? '#22D31B' : '#FF3B5C', flexShrink: 0 }}>
-                      {amount >= 0 ? '+' : ''}{amount} folhas
-                    </span>
-                  </motion.div>
-                );
-              })}
-            </div>
-          )}
-        </motion.div>
+            <p style={{ margin: 0, fontSize: '0.78rem', color: theme.textMuted }}>Nenhuma movimentação ainda.</p>
+          ) : folhasHistory.slice(0, 5).map(t => {
+            const amount = t.amount ?? t.points ?? 0;
+            return <div key={t.id} style={{ display: 'flex', justifyContent: 'space-between', gap: 10, padding: '8px 0', borderTop: `1px solid ${theme.line}`, fontSize: '0.74rem' }}><span style={{ color: theme.textMuted }}>{t.description}</span><strong style={{ color: amount >= 0 ? '#22D31B' : '#FF3B5C' }}>{amount >= 0 ? '+' : ''}{amount}</strong></div>;
+          })}
+        </div>
+
+        {/* Stats */}
+        <div className="p-stats-grid"
+          style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }}>
+          <CartaoEstatistica icon="gift" label="Folhas para desconto" value={folhas} color="#22D31B" bgColor="rgba(34,211,27,0.12)" delay={0.1} theme={theme} />
+          <CartaoEstatistica icon="check" label="Concluídos" value={completed} color="#22D31B" bgColor="rgba(34,211,27,0.12)" delay={0.15} theme={theme} />
+          <CartaoEstatistica icon="clock" label="Em andamento" value={pending} color="#3B82F6" bgColor="rgba(59,130,246,0.12)" delay={0.2} theme={theme} />
+          <CartaoEstatistica icon="trendingUp" label="Total investido" value={formatarMoeda(totalSpent)} color="#FF7A00" bgColor="rgba(255,122,0,0.12)" delay={0.25} theme={theme} />
+        </div>
+
+        {/* Achievements */}
+        <div style={{ padding: 20, borderRadius: 18, background: theme.cardBg, border: `1px solid ${theme.cardBorder}` }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+            <h3 style={{ fontFamily: 'var(--display)', fontWeight: 700, fontSize: '1rem', color: theme.text, margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <Icon name="trophy" size={18} color="#FF7A00" />
+              Conquistas
+            </h3>
+            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#FF7A00', fontFamily: 'var(--mono)' }}>
+              {unlockedCount}/{achievements.length}
+            </span>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+            {achievements.map((ach, i) => (
+              <AchievementCard key={ach.id} achievement={ach} index={i} theme={theme} />
+            ))}
+          </div>
+        </div>
       </div>
 
       <style>{`@media (max-width: 860px) { .folhas-grid { grid-template-columns: 1fr !important; } }`}</style>
@@ -747,8 +758,27 @@ export default function ClientProfilePage() {
             </div>
           </div>
 
+          {/* Carteira detalhada */}
+          <div style={{ padding: 20, borderRadius: 18, background: theme.cardBg, border: `1px solid ${theme.cardBorder}` }}>
+            <p style={{ margin: '0 0 10px', fontFamily: 'var(--display)', fontWeight: 800, color: theme.text }}>Carteira de Folhas</p>
+            <p style={{ margin: 0, fontSize: '0.82rem', color: theme.textMuted }}>≈ <strong style={{ color: '#22D31B' }}>{formatarMoeda(folhasDesconto)}</strong> em desconto acumulado</p>
+            <p style={{ margin: '8px 0 0', fontSize: '0.72rem', color: theme.textMuted }}>Use suas Folhas no agendamento de um serviço.</p>
+          </div>
+
+          {/* Histórico imediatamente abaixo da carteira */}
+          <div style={{ background: theme.cardBg, border: `1px solid ${theme.cardBorder}`, borderRadius: 18, padding: 20 }}>
+            <p style={{ margin: '0 0 12px', fontWeight: 800, color: theme.text, display: 'flex', alignItems: 'center', gap: 8 }}><Icon name="clock2" size={16} color="#FF7A00" /> Histórico de Folhas</p>
+            {folhasHistory.length === 0 ? (
+              <p style={{ margin: 0, fontSize: '0.78rem', color: theme.textMuted }}>Nenhuma movimentação ainda.</p>
+            ) : folhasHistory.slice(0, 5).map(t => {
+              const amount = t.amount ?? t.points ?? 0;
+              return <div key={t.id} style={{ display: 'flex', justifyContent: 'space-between', gap: 10, padding: '8px 0', borderTop: `1px solid ${theme.line}`, fontSize: '0.74rem' }}><span style={{ color: theme.textMuted }}>{t.description}</span><strong style={{ color: amount >= 0 ? '#22D31B' : '#FF3B5C' }}>{amount >= 0 ? '+' : ''}{amount}</strong></div>;
+            })}
+          </div>
+
           {/* Stats */}
-          <div className="p-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }}>
+          <div className="p-stats-grid"
+            style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }}>
             <CartaoEstatistica icon="gift" label="Folhas para desconto" value={folhas} color="#22D31B" bgColor="rgba(34,211,27,0.12)" delay={0.1} theme={theme} />
             <CartaoEstatistica icon="check" label="Concluídos" value={completed} color="#22D31B" bgColor="rgba(34,211,27,0.12)" delay={0.15} theme={theme} />
             <CartaoEstatistica icon="clock" label="Em andamento" value={pending} color="#3B82F6" bgColor="rgba(59,130,246,0.12)" delay={0.2} theme={theme} />
@@ -770,7 +800,7 @@ export default function ClientProfilePage() {
               {achievements.map((ach, i) => (
                 <AchievementCard key={ach.id} achievement={ach} index={i} theme={theme} />
               ))}
-                       </div>
+            </div>
           </div>
         </div>
       </div>

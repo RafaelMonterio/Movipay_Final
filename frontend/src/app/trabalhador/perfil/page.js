@@ -112,8 +112,8 @@ export default function WorkerProfilePage() {
   async function handlePortfolioPhoto(e) {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (!file.type.startsWith('image/')) { toast('Selecione uma imagem', 'error'); return; }
-    if (file.size > 3 * 1024 * 1024) { toast('Máximo 3MB', 'error'); return; }
+    if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) { toast('Selecione uma imagem ou vídeo', 'error'); return; }
+    if (file.size > 20 * 1024 * 1024) { toast('Máximo 20MB', 'error'); return; }
     const reader = new FileReader();
     reader.onload = async ev => {
       try {
@@ -265,12 +265,12 @@ export default function WorkerProfilePage() {
             {/* Portfólio */}
             <div style={{ marginBottom: 24 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                <h2 style={{ fontFamily: 'var(--display)', fontWeight: 700, fontSize: '0.95rem', color: theme.text }}>Portfólio de fotos</h2>
+                <h2 style={{ fontFamily: 'var(--display)', fontWeight: 700, fontSize: '0.95rem', color: theme.text }}>Portfólio de fotos e vídeos</h2>
                 <button onClick={() => photoRef.current?.click()} disabled={uploadingPhoto}
                   style={{ fontSize: '0.72rem', fontWeight: 700, color: '#fff', background: '#FF7A00', padding: '7px 12px', borderRadius: 10, border: 'none', cursor: 'pointer', opacity: uploadingPhoto ? 0.7 : 1, display: 'flex', alignItems: 'center', gap: 5 }}>
                   <Icon name="plus" size={11} color="#fff" /> Adicionar
                 </button>
-                <input ref={photoRef} type="file" accept="image/*" onChange={handlePortfolioPhoto} style={{ display: 'none' }} />
+                <input ref={photoRef} type="file" accept="image/*,video/*" onChange={handlePortfolioPhoto} style={{ display: 'none' }} />
               </div>
 
               {photos.length === 0 ? (
@@ -285,7 +285,11 @@ export default function WorkerProfilePage() {
                   {photos.map((ph, i) => (
                     <motion.div key={ph.id} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.05 }}
                       className="wk-photo" style={{ position: 'relative', aspectRatio: '1', borderRadius: 16, overflow: 'hidden', background: theme.bgAlt }}>
-                      <img src={ph.url} alt={ph.caption || 'Portfólio'} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      {String(ph.url || '').startsWith('data:video') || /\.(mp4|webm|mov)(\?|$)/i.test(ph.url || '') ? (
+                        <video src={ph.url} muted preload="metadata" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      ) : (
+                        <img src={ph.url} alt={ph.caption || 'Portfólio'} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      )}
                       <div className="wk-photo-overlay" style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)', opacity: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'opacity 0.2s' }}>
                         <button onClick={() => deletePhoto(ph.id)} style={{ background: '#FF3B5C', color: '#fff', fontSize: '0.7rem', fontWeight: 700, padding: '6px 12px', borderRadius: 8, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
                           <Icon name="trash" size={11} color="#fff" /> Remover

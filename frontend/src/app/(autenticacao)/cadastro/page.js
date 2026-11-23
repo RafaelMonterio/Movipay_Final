@@ -390,11 +390,15 @@ function StepServices({ form, theme }) {
           style={{ width: '100%', borderRadius: 12, padding: '12px 14px', fontSize: '0.88rem', fontFamily: 'var(--body)', outline: 'none', background: theme.inputBg, color: theme.text, border: `1.5px solid ${theme.line}` }} />
       </div>
       <div>
-        <label style={lbl}>Portfólio <span style={{ color: theme.textMuted, fontWeight: 500 }}>(opcional — até 4 fotos de trabalhos feitos)</span></label>
+        <label style={lbl}>Portfólio <span style={{ color: theme.textMuted, fontWeight: 500 }}>(opcional — até 4 fotos ou vídeos)</span></label>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
           {(form.values.portfolio || []).map((src, i) => (
             <div key={i} style={{ position: 'relative', aspectRatio: '1', borderRadius: 10, overflow: 'hidden', border: `1px solid ${theme.line}` }}>
-              <img src={src} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              {src.startsWith('data:video') ? (
+                <video src={src} muted preload="metadata" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              ) : (
+                <img src={src} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              )}
               <button type="button" onClick={() => form.handleChange('portfolio', form.values.portfolio.filter((_, k) => k !== i))}
                 style={{ position: 'absolute', top: 3, right: 3, width: 18, height: 18, borderRadius: '50%', background: 'rgba(0,0,0,0.6)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
                 <SharedIcon name="x" size={9} color="#fff" />
@@ -403,7 +407,7 @@ function StepServices({ form, theme }) {
           ))}
           {(form.values.portfolio?.length || 0) < 4 && (
             <>
-              <input type="file" accept="image/*" multiple id="reg-portfolio" style={{ display: 'none' }} onChange={e => addPortfolioFiles(e.target.files)} />
+              <input type="file" accept="image/*,video/*" multiple id="reg-portfolio" style={{ display: 'none' }} onChange={e => addPortfolioFiles(e.target.files)} />
               <label htmlFor="reg-portfolio" style={{ aspectRatio: '1', borderRadius: 10, border: `1.5px dashed ${theme.line}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: theme.textMuted }}>
                 <SharedIcon name="camera" size={18} />
               </label>

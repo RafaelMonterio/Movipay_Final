@@ -1,4 +1,5 @@
 'use client';
+import 'leaflet/dist/leaflet.css';
 import { useEffect, useRef } from 'react';
 
 // Centro de Ribeirão Pires/SP (cidade padrão de operação do MoviPay) —
@@ -61,6 +62,7 @@ function avatarHtml(worker) {
 export default function MapaProfissionais({ workers = [], center = CENTRO_CIDADE_PADRAO, onSelectWorker, height = 280, selectedWorkerId = null }) {
   const mapRef      = useRef(null);
   const instanceRef = useRef(null);
+  const leafletRef  = useRef(null);
 
   // Keep the latest onSelectWorker in a ref instead of a effect dependency.
   // Callers pass an inline arrow function (a new reference on every render),
@@ -93,6 +95,8 @@ export default function MapaProfissionais({ workers = [], center = CENTRO_CIDADE
 
     // Importa Leaflet dinamicamente (evita SSR errors)
     import('leaflet').then(L => {
+      leafletRef.current = L;
+
       // Corrige os ícones do Leaflet no Next.js
       delete L.Icon.Default.prototype._getIconUrl;
       L.Icon.Default.mergeOptions({
@@ -126,15 +130,26 @@ export default function MapaProfissionais({ workers = [], center = CENTRO_CIDADE
       });
       instanceRef.current = map;
 
-      // Basemap Carto Voyager: visual mais moderno, ruas legíveis e tons claros.
-      // O serviço de tiles não exige chave de API.
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-        maxZoom: 20,
+      const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
         minZoom: 3,
-        subdomains: 'abcd',
-        attribution: '&copy; OpenStreetMap &copy; CARTO',
+        attribution: '&copy; OpenStreetMap contributors',
         crossOrigin: true,
       }).addTo(map);
+
+      const esriFallback = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+        maxZoom: 19,
+        attribution: 'Tiles &copy; Esri',
+        crossOrigin: true,
+      });
+
+      let switchedToFallback = false;
+      osm.on('tileerror', () => {
+        if (switchedToFallback || !map.hasLayer(osm)) return;
+        switchedToFallback = true;
+        map.removeLayer(osm);
+        esriFallback.addTo(map);
+      });
 
       map.getContainer().style.background =
         'linear-gradient(90deg, rgba(148,163,184,.12) 1px, transparent 1px), linear-gradient(rgba(148,163,184,.12) 1px, transparent 1px), #f1f5f9';
@@ -226,6 +241,11 @@ export default function MapaProfissionais({ workers = [], center = CENTRO_CIDADE
         link.href = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css';
         document.head.appendChild(link);
       }
+
+      requestAnimationFrame(() => {
+        map.invalidateSize({ pan: false, animate: false });
+        map.setView(center, 14, { animate: false });
+      });
     });
 
     return () => {
@@ -250,32 +270,41 @@ export default function MapaProfissionais({ workers = [], center = CENTRO_CIDADE
     let selectedMarker = null;
 
     map.eachLayer(layer => {
-      if (!(layer instanceof window.L.Marker)) return;
+      if (!(leafletRef.current && layer instanceof leafletRef.current.Marker)) return;
 
       const workerData = layer.options?.workerData;
-      if (workerData && String(workerData.id) === String(selectedWorkerId)) {
+      if (!workerData) return;
+
+      if (selectedMarker) {
+        // Remove o destaque do marcador selecionado anterior
+        selectedMarker.setOpacity(1);
+        selectedMarker.getElement()?.classList.remove('marker-highlight');
+      }
+
+      if (String(workerData.id) === String(selectedWorkerId)) {
         selectedMarker = layer;
+        // Aplica um estilo especial ao marcador selecionado
+        selectedMarker.setOpacity(1);
+        selectedMarker.getElement()?.classList.add('marker-highlight');
+        // Centraliza o mapa no marcador selecionado
+        const [lat, lng] = resolveWorkerPosition(workerData) || [];
+        if (lat && lng) {
+          map.setView([lat, lng], 15, { animate: true });
+        }
       }
     });
-
-    if (selectedMarker) {
-      selectedMarker.openPopup();
-    }
   }, [selectedWorkerId]);
 
-  function zoomBy(d) {
-    if (!instanceRef.current) return;
-    if (d > 0) instanceRef.current.zoomIn(d); else instanceRef.current.zoomOut(-d);
-  }
-
   return (
-    <div style={{ position: 'relative', width: '100%', height }}>
-      <div ref={mapRef} className="w-full rounded-2xl overflow-hidden" style={{ height: '100%', width: '100%' }} />
-      <div style={{ position: 'absolute', bottom: 14, left: '50%', transform: 'translateX(-50%)', zIndex: 40, display: 'flex', alignItems: 'center', background: '#fff', borderRadius: 999, boxShadow: '0 6px 20px rgba(0,0,0,0.18)', overflow: 'hidden' }}>
-        <button type="button" onClick={() => zoomBy(1)} aria-label="Aproximar" style={{ width: 34, height: 34, border: 'none', background: 'transparent', cursor: 'pointer', color: '#1f2937', fontSize: 18, fontWeight: 700 }}>+</button>
-        <div style={{ width: 1, height: 18, background: '#e5e7eb' }} />
-        <button type="button" onClick={() => zoomBy(-1)} aria-label="Afastar" style={{ width: 34, height: 34, border: 'none', background: 'transparent', cursor: 'pointer', color: '#1f2937', fontSize: 20, fontWeight: 700 }}>−</button>
-      </div>
-    </div>
+    <div
+      ref={mapRef}
+      style={{
+        height: typeof height === 'number' ? `${height}px` : height,
+        width: '100%',
+        borderRadius: '12px',
+        overflow: 'hidden',
+        position: 'relative',
+      }}
+    />
   );
 }
