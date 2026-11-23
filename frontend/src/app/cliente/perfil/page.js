@@ -148,9 +148,6 @@ function LevelProgress({ points, level, nextLevel, theme }) {
               </linearGradient>
             </defs>
           </svg>
-          <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.4rem' }}>
-            <SharedIcon name={level.icon} size={28} color={level.color} />
-          </div>
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
@@ -262,7 +259,7 @@ function AchievementCard({ achievement, index, theme }) {
 /* ─── PROFILE HEADER ────────────────────────────────────────────── */
 function ProfileHeader({ profile, theme, points, level, onEdit }) {
   const initials = profile?.name ? profile.name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase() : 'MP';
-  const memberSince = profile?.created_at ? new Date(profile.created_at).getFullYear()() : new Date().getFullYear();
+  const memberSince = profile?.created_at ? new Date(profile.created_at).getFullYear() : new Date().getFullYear();
 
   return (
     <motion.div
@@ -285,12 +282,6 @@ function ProfileHeader({ profile, theme, points, level, onEdit }) {
               {initials}
             </div>
           )}
-          <motion.div
-            style={{ position: 'absolute', bottom: 2, right: 2, width: 28, height: 28, borderRadius: '50%', background: level.color, border: '3px solid #fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.9rem', boxShadow: '0 2px 8px rgba(0,0,0,0.2)' }}
-            initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.5, type: 'spring' }}
-          >
-            <SharedIcon name={level.icon} size={28} color={level.color} />
-          </motion.div>
         </div>
 
         <div style={{ flex: 1, minWidth: 200 }}>
@@ -309,10 +300,6 @@ function ProfileHeader({ profile, theme, points, level, onEdit }) {
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 12px', borderRadius: 999, background: 'rgba(255,255,255,0.2)', fontSize: '0.75rem', fontWeight: 700, backdropFilter: 'blur(4px)' }}>
               <Icon name="calendar" size={13} />
               Desde {memberSince}
-            </span>
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 12px', borderRadius: 999, background: 'rgba(255,255,255,0.2)', fontSize: '0.75rem', fontWeight: 700, backdropFilter: 'blur(4px)' }}>
-              <Icon name="star" size={13} />
-              {level.name}
             </span>
           </div>
         </div>
@@ -751,11 +738,18 @@ export default function ClientProfilePage() {
         {/* Right column - Stats & Gamification */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           {/* Level Progress */}
-          <LevelProgress points={points} level={level} nextLevel={nextLevel} theme={theme} />
+          <div style={{ padding: 20, borderRadius: 18, background: 'linear-gradient(135deg, #1B5E20, #22D31B)', color: '#fff', display: 'flex', alignItems: 'center', gap: 14 }}>
+            <img src="/img/Iconfolha_para_fundoescuro.png" alt="Folhas" style={{ width: 52, height: 52, objectFit: 'contain' }} />
+            <div>
+              <p style={{ margin: 0, fontSize: '0.78rem', opacity: 0.9 }}>Saldo disponível</p>
+              <p style={{ margin: '3px 0', fontFamily: 'var(--display)', fontWeight: 900, fontSize: '1.55rem' }}>{folhas} Folhas</p>
+              <p style={{ margin: 0, fontSize: '0.72rem', opacity: 0.9 }}>Use no próximo serviço como desconto</p>
+            </div>
+          </div>
 
           {/* Stats */}
           <div className="p-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }}>
-            <CartaoEstatistica icon="star" label="Pontos" value={points} color="#FF7A00" bgColor="rgba(255,122,0,0.12)" delay={0.1} theme={theme} />
+            <CartaoEstatistica icon="gift" label="Folhas para desconto" value={folhas} color="#22D31B" bgColor="rgba(34,211,27,0.12)" delay={0.1} theme={theme} />
             <CartaoEstatistica icon="check" label="Concluídos" value={completed} color="#22D31B" bgColor="rgba(34,211,27,0.12)" delay={0.15} theme={theme} />
             <CartaoEstatistica icon="clock" label="Em andamento" value={pending} color="#3B82F6" bgColor="rgba(59,130,246,0.12)" delay={0.2} theme={theme} />
             <CartaoEstatistica icon="trendingUp" label="Total investido" value={formatarMoeda(totalSpent)} color="#FF7A00" bgColor="rgba(255,122,0,0.12)" delay={0.25} theme={theme} />

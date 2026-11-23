@@ -126,14 +126,13 @@ export default function MapaProfissionais({ workers = [], center = CENTRO_CIDADE
       });
       instanceRef.current = map;
 
-      // Basemap claro e minimalista, 100% gratuito e sem exigir chave de
-      // API (Esri "Light Gray Canvas"). O antigo provedor (CARTO) passou a
-      // exigir uma API key para o tile raster e, sem ela, exibia a
-      // marca d'água "API KEY REQUIRED" por cima do mapa.
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
+      // Basemap Carto Voyager: visual mais moderno, ruas legíveis e tons claros.
+      // O serviço de tiles não exige chave de API.
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+        maxZoom: 20,
         minZoom: 3,
-        attribution: '&copy; OpenStreetMap contributors',
+        subdomains: 'abcd',
+        attribution: '&copy; OpenStreetMap &copy; CARTO',
         crossOrigin: true,
       }).addTo(map);
 
@@ -272,8 +271,6 @@ export default function MapaProfissionais({ workers = [], center = CENTRO_CIDADE
   return (
     <div style={{ position: 'relative', width: '100%', height }}>
       <div ref={mapRef} className="w-full rounded-2xl overflow-hidden" style={{ height: '100%', width: '100%' }} />
-      {/* Botões de zoom próprios: o controle padrão do Leaflet fica nos cantos,
-          que a máscara circular da home corta. Estes ficam sempre visíveis. */}
       <div style={{ position: 'absolute', bottom: 14, left: '50%', transform: 'translateX(-50%)', zIndex: 40, display: 'flex', alignItems: 'center', background: '#fff', borderRadius: 999, boxShadow: '0 6px 20px rgba(0,0,0,0.18)', overflow: 'hidden' }}>
         <button type="button" onClick={() => zoomBy(1)} aria-label="Aproximar" style={{ width: 34, height: 34, border: 'none', background: 'transparent', cursor: 'pointer', color: '#1f2937', fontSize: 18, fontWeight: 700 }}>+</button>
         <div style={{ width: 1, height: 18, background: '#e5e7eb' }} />

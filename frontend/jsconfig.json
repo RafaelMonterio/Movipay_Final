@@ -1,9 +1,9 @@
 {
   "compilerOptions": {
     "allowJs": true,
-    "ignoreDeprecations": "6.0",
     "baseUrl": ".",
-    "moduleResolution": "bundler",   
+    "module": "esnext",
+    "moduleResolution": "bundler",
     "paths": {
       "@/*": ["./src/*"]
     }

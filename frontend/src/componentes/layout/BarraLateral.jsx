@@ -23,7 +23,6 @@ const workerLinks = [
   { href: '/trabalhador/orcamentos', icon: Target, label: 'Oportunidades' },
   { href: '/trabalhador/agenda', icon: CalendarDays, label: 'Agenda' },
   { href: '/trabalhador/ganhos', icon: Wallet, label: 'Ganhos' },
-  { href: '/trabalhador/carteira', icon: CreditCard, label: 'Carteira' },
   { href: '/trabalhador/planos', icon: Heart, label: 'Planos' },
   { href: '/trabalhador/conversas', icon: MessageCircle, label: 'Chat' },
   { href: '/trabalhador/perfil', icon: User, label: 'Perfil' },

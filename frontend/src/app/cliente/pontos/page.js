@@ -6,19 +6,6 @@ import { formatarData } from '@/utilitarios/formatadores';
 import api from '@/servicos/clienteApi';
 import SharedIcon, { FolhaCoin } from '@/componentes/interface/Icone';
 
-const LEVEL_THRESHOLDS = [0, 300, 1000];
-const LEVEL_NAMES      = ['Formiga VIP · Operária', 'Formiga VIP · Voadora', 'Formiga VIP · Rainha'];
-const LEVEL_ICONS      = ['sprout', 'sparkle', 'crown'];
-const LEVEL_COLORS     = ['#22C55E', '#22D3EE', '#F59E0B'];
-
-function getLevel(pts) {
-  let lvl = 0;
-  for (let i = 0; i < LEVEL_THRESHOLDS.length; i++) {
-    if (pts >= LEVEL_THRESHOLDS[i]) lvl = i;
-  }
-  return lvl;
-}
-
 export default function ClientPointsPage() {
   const [balance, setBalance]     = useState(0);
   const [history, setHistory]     = useState([]);
@@ -31,18 +18,12 @@ export default function ClientPointsPage() {
     ]).finally(() => setLoading(false));
   }, []);
 
-  const level     = getLevel(balance);
-  const nextLevel = LEVEL_THRESHOLDS[level + 1];
-  const progress  = nextLevel
-    ? Math.round(((balance - LEVEL_THRESHOLDS[level]) / (nextLevel - LEVEL_THRESHOLDS[level])) * 100)
-    : 100;
-
   return (
     <LayoutPainel>
       <div className="p-8 space-y-8">
         <motion.div initial={{ opacity: 0, y: -16 }} animate={{ opacity: 1, y: 0 }}>
           <h1 className="text-3xl font-black text-slate-800"><span className="inline-flex items-center gap-2"><FolhaCoin size={32} /> Minhas Folhas</span></h1>
-          <p className="text-slate-500 mt-1">Acumule Folhas e suba de nível</p>
+          <p className="text-slate-500 mt-1">Acumule Folhas e use como desconto nos serviços</p>
         </motion.div>
 
         {/* Balance card */}
@@ -51,38 +32,13 @@ export default function ClientPointsPage() {
         >
           <p className="text-amber-100 font-medium mb-1">Saldo atual</p>
           <p className="text-6xl font-black mb-2">{balance}</p>
-          <p className="text-amber-100 text-lg">Folhas</p>
-
-          <div className="mt-6 flex items-center gap-3">
-            <SharedIcon name={LEVEL_ICONS[level]} size={34} color="#fff" />
-            <div className="flex-1">
-              <div className="flex justify-between text-sm font-semibold text-amber-100 mb-1">
-                <span>{LEVEL_NAMES[level]}</span>
-                {nextLevel && <span>{nextLevel - balance} pts para {LEVEL_NAMES[level + 1]}</span>}
-              </div>
-              <div className="w-full bg-white/30 rounded-full h-2">
-                <motion.div initial={{ width: 0 }} animate={{ width: `${progress}%` }} transition={{ delay: 0.5, duration: 1 }}
-                  className="bg-white rounded-full h-2"
-                />
-              </div>
-            </div>
-          </div>
+          <p className="text-amber-100 text-lg">Folhas disponíveis para desconto</p>
         </motion.div>
 
-        {/* Levels grid */}
-        <div>
-          <h2 className="text-lg font-bold text-slate-800 mb-4">Níveis</h2>
-          <div className="grid grid-cols-3 md:grid-cols-3 gap-3">
-            {LEVEL_NAMES.map((name, i) => (
-              <motion.div key={name} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.07 }}
-                className={`card p-4 text-center ${level >= i ? 'border-amber-300 bg-amber-50' : 'opacity-40'}`}
-              >
-                <div className="flex justify-center mb-1"><SharedIcon name={LEVEL_ICONS[i]} size={26} color={LEVEL_COLORS[i]} /></div>
-                <p className="text-xs font-semibold text-slate-700">{name}</p>
-                <p className="text-xs text-slate-400">{LEVEL_THRESHOLDS[i]} pts</p>
-              </motion.div>
-            ))}
-          </div>
+        {/* Uso das Folhas */}
+        <div className="card p-5 flex items-center gap-4">
+          <FolhaCoin size={44} />
+          <p className="text-sm text-slate-600">Você pode aplicar estas Folhas diretamente no pagamento de um serviço para obter desconto.</p>
         </div>
 
         {/* History */}

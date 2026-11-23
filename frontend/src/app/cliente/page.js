@@ -933,7 +933,7 @@ export default function ClientDashboardPage() {
                     fontSize: '0.78rem',
                   }}
                 >
-                  <Icon name="leaf" size={14} color="#22D31B" />
+                  <img src="/img/Iconfolha_para_fundoescuro.png" alt="Folhas" style={{ width: 16, height: 16, objectFit: 'contain' }} />
                   <span>{folhasBalance} Folhas</span>
                 </Link>
 
@@ -1178,40 +1178,16 @@ export default function ClientDashboardPage() {
                 </div>
               </motion.div>
 
-              {/* Nível da Comunidade */}
+              {/* Uso das Folhas */}
               <motion.div
                 initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.24 }}
-                style={{
-                  background: theme.cardBg,
-                  border: `1.5px solid ${theme.cardBorder}`,
-                  borderRadius: 20,
-                  padding: 24,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 16,
-                  boxShadow: '0 8px 24px rgba(0,0,0,0.05)',
-                }}
+                style={{ background: theme.cardBg, border: `1.5px solid ${theme.cardBorder}`, borderRadius: 20, padding: 24, display: 'flex', alignItems: 'center', gap: 16, boxShadow: '0 8px 24px rgba(0,0,0,0.05)' }}
               >
-                <div
-                  style={{
-                    position: 'relative', width: 64, height: 64, borderRadius: '50%', flexShrink: 0,
-                    background: `conic-gradient(#FF7A00 ${Math.min(100, folhasBalance % 100)}%, ${theme.line} 0)`,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  }}
-                >
-                  <div style={{ width: 50, height: 50, borderRadius: '50%', background: theme.cardBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
-                    <span style={{ fontFamily: 'var(--display)', fontWeight: 800, fontSize: '1.1rem', color: theme.text, lineHeight: 1 }}>
-                      {Math.floor(folhasBalance / 100) + 1}
-                    </span>
-                    <span style={{ fontSize: '0.52rem', color: theme.textMuted, fontWeight: 800, textTransform: 'uppercase' }}>nível</span>
-                  </div>
-                </div>
+                <img src="/img/Iconmoedafolha-fundobranco.png" alt="Descontos com Folhas" style={{ width: 64, height: 64, objectFit: 'contain', flexShrink: 0 }} />
                 <div>
-                  <p style={{ fontWeight: 800, fontSize: '0.9rem', color: theme.text, display: 'flex', alignItems: 'center', gap: 6 }}>
-                    Formiga VIP <Icon name="ant" size={15} color="#FF7A00" />
-                  </p>
-                  <p style={{ fontSize: '0.74rem', color: theme.textMuted, marginTop: 2 }}>
-                    Faltam {100 - (folhasBalance % 100)} folhas para o nível {Math.floor(folhasBalance / 100) + 2}
+                  <p style={{ fontWeight: 800, fontSize: '0.9rem', color: theme.text }}>Folhas em desconto</p>
+                  <p style={{ fontSize: '0.74rem', color: theme.textMuted, marginTop: 4 }}>
+                    Use o saldo diretamente no agendamento e pague menos pelo serviço.
                   </p>
                 </div>
               </motion.div>
